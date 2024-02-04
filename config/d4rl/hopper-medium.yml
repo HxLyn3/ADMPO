@@ -1,0 +1,3 @@
+rollout_length: 5
+penalty_coef: 1.5
+auto_alpha: False
