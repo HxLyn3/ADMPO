@@ -23,6 +23,7 @@ class ONTrainer(BASETrainer):
             action_space=args.action_space,
             static_fn=static_fn,
             max_arm_step=args.max_arm_step,
+            actor_freq=args.actor_freq,
             actor_lr=args.actor_lr,
             critic_lr=args.critic_lr,
             model_lr=args.model_lr,
@@ -32,7 +33,7 @@ class ONTrainer(BASETrainer):
             auto_alpha=args.auto_alpha,
             alpha_lr=args.alpha_lr,
             target_entropy=args.target_entropy,
-            penalty_coef=0,
+            penalty_coef=args.penalty_coef,
             device=args.device
         )
         self.agent.train()
@@ -59,11 +60,12 @@ class ONTrainer(BASETrainer):
         # func 4 calculate new model buffer size
         self.make_model_buffer_size = lambda it: \
             int(args.rollout_batch_size*self.make_rollout_len(it) * \
-            args.model_retain_steps/args.model_update_interval)
+            args.model_retain_steps/args.model_rollout_interval)
 
         # other parameters
         self.max_arm_step = args.max_arm_step
         self.model_update_interval = args.model_update_interval
+        self.model_rollout_interval = args.model_rollout_interval
         self.rollout_batch_size = args.rollout_batch_size
         self.real_ratio = args.real_ratio
         self.n_steps = args.n_steps
@@ -88,8 +90,9 @@ class ONTrainer(BASETrainer):
         for it in pbar:
             # update dynamics model
             if it % self.model_update_interval == 0:
-                model_loss = self.agent.learn_dynamics_from(self.memory, self.batch_size)
+                model_loss = self.agent.learn_dynamics_from(self.memory, self.batch_size, max_holdout=500)
 
+            if it % self.model_rollout_interval == 0:
                 # update imaginary memory
                 new_model_buffer_size = self.make_model_buffer_size(it)
                 if self.model_memory.capacity != new_model_buffer_size:

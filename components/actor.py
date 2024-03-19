@@ -23,7 +23,7 @@ class DiagGaussian(nn.Module):
         unbounded=False, 
         conditioned_sigma=False, 
         max_mu=1.0, 
-        sigma_min=-20, 
+        sigma_min=-5, 
         sigma_max=2
     ):
         super(DiagGaussian, self).__init__()

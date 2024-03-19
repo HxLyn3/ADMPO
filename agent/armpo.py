@@ -7,7 +7,7 @@ from .sac import SACAgent
 from dynamics import ARMDynamics
 
 class ARMPOAgent(SACAgent):
-    """ Any-step RNN-based Dynamics Model for Policy Optimization (Online) """
+    """ Any-step RNN-based Dynamics Model for Policy Optimization """
 
     def __init__(
         self, 
@@ -17,6 +17,7 @@ class ARMPOAgent(SACAgent):
         action_space,
         static_fn,
         max_arm_step,
+        actor_freq,
         actor_lr,
         critic_lr,
         model_lr,
@@ -27,10 +28,11 @@ class ARMPOAgent(SACAgent):
         alpha_lr=3e-4,
         target_entropy=-1,
         penalty_coef=1,
+        deterministic_backup=False,
         device="cuda:0"
     ):
-        super().__init__(obs_shape, hidden_dims, action_dim, action_space,
-            actor_lr, critic_lr, tau, gamma, alpha, auto_alpha, alpha_lr, target_entropy, device)
+        super().__init__(obs_shape, hidden_dims, action_dim, action_space, actor_freq, actor_lr, critic_lr, 
+            tau, gamma, alpha, auto_alpha, alpha_lr, target_entropy, deterministic_backup, device)
         self.penalty_coef = penalty_coef
 
         self.static_fn = static_fn
@@ -83,15 +85,16 @@ class ARMPOAgent(SACAgent):
             timeout = np.zeros(done.shape, dtype=bool)
 
             # uncertainty
-            next_obs_means = []
-            for k in range(1, max_step+1):
-                input_s = transitions["s"][:, -k]
-                input_a = transitions["a"][:, -k:]
-                next_obs_mean, _ = self.dynamics.dstep(input_s, input_a)
-                next_obs_means.append(next_obs_mean)
-            next_obs_means = np.stack(next_obs_means, axis=0)
-            penalty = np.sqrt(next_obs_means.var(axis=0).mean(axis=-1, keepdims=True))
-            reward -= self.penalty_coef * penalty
+            if self.penalty_coef != 0:
+                next_obs_means = []
+                for k in range(1, max_step+1):
+                    input_s = transitions["s"][:, -k]
+                    input_a = transitions["a"][:, -k:]
+                    next_obs_mean, _ = self.dynamics.dstep(input_s, input_a)
+                    next_obs_means.append(next_obs_mean)
+                next_obs_means = np.stack(next_obs_means, axis=0)
+                penalty = np.sqrt(next_obs_means.var(axis=0).mean(axis=-1, keepdims=True))
+                reward -= self.penalty_coef * penalty
             
             # store
             transitions["r"] = np.concatenate((transitions["r"], reward[:, None]), axis=1)
@@ -114,7 +117,7 @@ class ARMPOAgent(SACAgent):
         transitions.pop("mask")
         return transitions
 
-    def learn_dynamics_from(self, buffer, batch_size):
+    def learn_dynamics_from(self, buffer, batch_size, max_holdout=1000, min_epochs=1):
         """ learn any-step rnn-based dynamics model """
         self.reset_dyna()
 
@@ -124,7 +127,7 @@ class ARMPOAgent(SACAgent):
         saved_dynamics = copy.deepcopy(self.dynamics)
 
         data_size = buffer.size
-        holdout_size = min(int(data_size * 0.2), 1000)
+        holdout_size = min(int(data_size * 0.2), max_holdout)
         train_size = data_size - holdout_size
 
         epoch = 0
@@ -168,7 +171,7 @@ class ARMPOAgent(SACAgent):
                     holdout_loss=np.mean(holdout_losses)
                 )
 
-            improve_ks = []
+            new_val_losses, improve_ks = [], []
             for k in range(1, self.max_arm_step+1):
                 k_step_seq = buffer.sample_nstep(batch_size, k, start_idx=train_size)
                 k_val_loss = self.validate_dynamics_from(
@@ -177,18 +180,19 @@ class ARMPOAgent(SACAgent):
                     r=k_step_seq["r"][:, -1],
                     s_=k_step_seq["s_"][:, -1]
                 )
+                new_val_losses.append(k_val_loss)
                 k_improvement = (holdout_losses[k-1] - k_val_loss) / holdout_losses[k-1]
-                if k_improvement > 0.01:
-                    holdout_losses[k-1] = k_val_loss
+                if k_improvement > 0:
                     improve_ks.append(k)
 
-            if len(improve_ks) > 0:
+            if len(improve_ks) > 0 and np.mean(new_val_losses) < np.mean(holdout_losses):
                 saved_dynamics = copy.deepcopy(self.dynamics)
+                holdout_losses = new_val_losses
                 cnt = 0
             else:
                 cnt += 1
 
-            if cnt >= 5:
+            if cnt >= 25 and epoch >= min_epochs:
                 break
 
         self.dynamics = saved_dynamics

@@ -1,3 +1,4 @@
+max_arm_step: 5
+rollout_schedule: [0, 50000, 1, 15]
 target_entropy: -1
-rollout_schedule: [10000, 100000, 1, 20]
-n_steps: 100000
+n_steps: 50000

@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 from tqdm import tqdm
 
@@ -23,6 +24,7 @@ class OFFTrainer(BASETrainer):
             action_space=args.action_space,
             static_fn=static_fn,
             max_arm_step=args.max_arm_step,
+            actor_freq=args.actor_freq,
             actor_lr=args.actor_lr,
             critic_lr=args.critic_lr,
             model_lr=args.model_lr,
@@ -33,9 +35,11 @@ class OFFTrainer(BASETrainer):
             alpha_lr=args.alpha_lr,
             target_entropy=args.target_entropy,
             penalty_coef=args.penalty_coef,
+            deterministic_backup=args.deterministic_backup,
             device=args.device
         )
         self.agent.train()
+        self.lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.agent.actor_optim, args.n_epochs)
 
         # init replay buffer to store environmental data
         self.memory = BUFFER["seq-sample"](
@@ -126,6 +130,9 @@ class OFFTrainer(BASETrainer):
                     eval_reward=eval_reward,
                     eval_score=eval_score
                 )
+
+            # update lr
+            self.lr_scheduler.step()
 
             # evaluate policy
             episode_rewards = self._eval_policy()

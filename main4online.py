@@ -15,14 +15,14 @@ def get_args():
     # environment settings
     parser.add_argument("--env", type=str, default="mujoco")
     # mujoco choices: ["InvertedPendulum-v2", "Hopper-v3", "Swimmer-v3", "Walker2d-v3", "HalfCheetah-v3", "AntTruncatedObs-v3", "HumanoidTruncatedObs-v3"]
-    parser.add_argument("--env-name", type=str, default="Hopper-v3")
+    parser.add_argument("--env-name", type=str, default="Walker2d-v3")
 
     # policy parameters
     parser.add_argument("--algo", type=str, default="armpo")
     parser.add_argument("--ac-hidden-dims", type=list, default=[256, 256])              # dimensions of actor/critic hidden layers
+    parser.add_argument("--actor-freq", type=int, default=1)
     parser.add_argument("--actor-lr", type=float, default=3e-4)                         # learning rate of actor
     parser.add_argument("--critic-lr", type=float, default=3e-4)                        # learning rate of critic
-    parser.add_argument("--actor-freq", type=int, default=20)                           # actor update frequency
     parser.add_argument("--gamma", type=float, default=0.99)                            # discount factor
     parser.add_argument("--tau", type=float, default=0.005)                             # update rate of target network
     # (for sac)
@@ -30,6 +30,7 @@ def get_args():
     parser.add_argument("--auto-alpha", type=bool, default=True)                        # auto alpha adjustment
     parser.add_argument("--alpha-lr", type=float, default=3e-4)                         # learning rate of alpha
     parser.add_argument("--target-entropy", type=int, default=-1)                       # target entropy
+    parser.add_argument("--penalty-coef", type=float, default=0.0)                      # penalty coefficient
 
     # armpo parameters
     parser.add_argument("--max-arm-step", type=int, default=10)                          # maximum length of rnn input
@@ -42,6 +43,7 @@ def get_args():
     parser.add_argument("--rollout-batch-size", type=int, default=int(1e5))
     parser.add_argument("--rollout-schedule", type=int, nargs='*', default=[int(1e4), int(1e5), 1, 20])
     parser.add_argument("--model-update-interval", type=int, default=250)
+    parser.add_argument("--model-rollout-interval", type=int, default=250)
     parser.add_argument("--model-retain-steps", type=int, default=1000)
     parser.add_argument("--real-ratio", type=float, default=0.05)
 

@@ -13,6 +13,7 @@ class SACAgent:
         hidden_dims, 
         action_dim,
         action_space,
+        actor_freq,
         actor_lr,
         critic_lr,
         tau=0.005, 
@@ -21,6 +22,7 @@ class SACAgent:
         auto_alpha=True,
         alpha_lr=3e-4,
         target_entropy=-1,
+        deterministic_backup=False,
         device="cuda:0"
     ):
         # actor
@@ -43,6 +45,10 @@ class SACAgent:
         # action space
         self.action_space = action_space
 
+        # actor update frequency
+        self.actor_freq = actor_freq
+        self.critic_cnt = 0
+
         # alpha: weight of entropy
         self._auto_alpha = auto_alpha
         if self._auto_alpha:
@@ -58,6 +64,7 @@ class SACAgent:
         # other parameters
         self._tau = tau
         self._gamma = gamma
+        self._deterministic_backup = deterministic_backup
         self._eps = np.finfo(np.float32).eps.item()
         self.device = device
 
@@ -114,7 +121,9 @@ class SACAgent:
         q1, q2 = self.critic1(s, a).flatten(), self.critic2(s, a).flatten()
         with torch.no_grad():
             a_, log_prob_ = self.actor4ward(s_)
-            q_ = torch.min(self.critic1_trgt(s_, a_), self.critic2_trgt(s_, a_)) - self._alpha*log_prob_
+            q_ = torch.min(self.critic1_trgt(s_, a_), self.critic2_trgt(s_, a_)) 
+            if not self._deterministic_backup:
+                q_ -= self._alpha*log_prob_
             q_trgt = r.flatten() + self._gamma*(1-done.flatten())*q_.flatten()
 
         critic1_loss = ((q1-q_trgt).pow(2)).mean()
@@ -127,36 +136,40 @@ class SACAgent:
         critic2_loss.backward()
         self.critic2_optim.step()
 
-        # update actor
-        a, log_prob = self.actor4ward(s)
-        q1, q2 = self.critic1(s, a).flatten(), self.critic2(s, a).flatten()
-        actor_loss = (self._alpha*log_prob.flatten() - torch.min(q1, q2)).mean()
-        self.actor_optim.zero_grad()
-        actor_loss.backward()
-        self.actor_optim.step()
+        self.critic_cnt += 1
 
-        # update alpha
-        if self._auto_alpha:
-            log_prob = log_prob.detach() + self._target_entropy
-            alpha_loss = -(self._log_alpha*log_prob).mean()
-            self._alpha_optim.zero_grad()
-            alpha_loss.backward()
-            self._alpha_optim.step()
-            self._alpha = self._log_alpha.detach().exp()
+        actor_loss, alpha_loss = [None]*2
+        if self.critic_cnt % self.actor_freq == 0:
+            # update actor
+            a, log_prob = self.actor4ward(s)
+            q1, q2 = self.critic1(s, a).flatten(), self.critic2(s, a).flatten()
+            actor_loss = (self._alpha*log_prob.flatten() - torch.min(q1, q2)).mean()
+            self.actor_optim.zero_grad()
+            actor_loss.backward()
+            self.actor_optim.step()
+
+            # update alpha
+            if self._auto_alpha:
+                log_prob = log_prob.detach() + self._target_entropy
+                alpha_loss = -(self._log_alpha*log_prob).mean()
+                self._alpha_optim.zero_grad()
+                alpha_loss.backward()
+                self._alpha_optim.step()
+                self._alpha = self._log_alpha.detach().exp()
 
         # synchronize weight
         self._sync_weight()
 
         info = {
             "loss": {
-                "actor": actor_loss.item(),
+                "actor": actor_loss.item() if actor_loss else None,
                 "critic1": critic1_loss.item(),
                 "critic2": critic2_loss.item()
             }
         }
 
         if self._auto_alpha:
-            info["loss"]["alpha"] = alpha_loss.item()
+            info["loss"]["alpha"] = alpha_loss.item() if alpha_loss else None
             info["alpha"] = self._alpha.item()
         else:
             info["loss"]["alpha"] = 0
