@@ -16,13 +16,14 @@ class ONTrainer(BASETrainer):
         # init armpo agent
         task = args.env_name.split('-')[0]
         static_fn = STATICFUNC[task.lower()]
-        self.agent = AGENT["armpo"](
+        self.agent = AGENT["admpo"](
             obs_shape=args.obs_shape,
             hidden_dims=args.ac_hidden_dims,
             action_dim=args.action_dim,
             action_space=args.action_space,
             static_fn=static_fn,
             max_arm_step=args.max_arm_step,
+            arm_hidden_dim=args.arm_hidden_dim,
             actor_freq=args.actor_freq,
             actor_lr=args.actor_lr,
             critic_lr=args.critic_lr,

@@ -32,6 +32,7 @@ class BASETrainer:
         self.args = args
 
         dtime = datetime.datetime.now().strftime("%y-%m%d-%H%M%S")
+        if args.env == "neorl": args.env_name += f"-{args.data_type}"
         self.model_dir = "./result/{}/{}/{}/{}/model".format(args.env, args.env_name, args.algo, dtime)
         self.record_dir = "./result/{}/{}/{}/{}/record".format(args.env, args.env_name, args.algo, dtime)
         self.log_dir = "./result/{}/{}/{}/{}/log".format(args.env, args.env_name, args.algo, dtime)
@@ -73,6 +74,6 @@ class BASETrainer:
 
     def _save(self, records):
         """ save model and record """
-        self.agent.save_model(os.path.join(self.model_dir, "model_seed-{}.pth".format(self.seed)))
+        self.agent.save_model(os.path.join(self.model_dir, "agent_seed-{}.pth".format(self.seed)))
         with open(os.path.join(self.record_dir, "record_seed-{}.txt".format(self.seed)), "w") as f:
             json.dump(records, f)
