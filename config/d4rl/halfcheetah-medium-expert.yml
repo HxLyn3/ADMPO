@@ -1,0 +1,6 @@
+max_arm_step: 2
+arm_hidden_dim: 400
+rollout_length: 20
+real_ratio: 0.5
+penalty_coef: 5
+auto_alpha: False

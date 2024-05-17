@@ -1,6 +1,5 @@
 max_arm_step: 5
-rollout_length: 50
+rollout_length: 20
 penalty_coef: 5
 auto_alpha: False
-alpha: 1.0
-n_epochs: 3000
+alpha: 0.1

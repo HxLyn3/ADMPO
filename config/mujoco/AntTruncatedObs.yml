@@ -1,0 +1,9 @@
+max_arm_step: 2
+arm_hidden_dim: 400
+model_update_interval: 500
+model_rollout_interval: 500
+model_retain_steps: 2500
+rollout_schedule: [10000, 100000, 1, 5]
+target_entropy: -4
+actor_freq: 20
+n_steps: 300000
