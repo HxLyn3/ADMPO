@@ -1,4 +1,5 @@
 import numpy as np
+from gymnasium.spaces import Box
 from gymnasium.envs.mujoco.humanoid_v3 import HumanoidEnv
 
 class HumanoidTruncatedObsEnv(HumanoidEnv):
@@ -31,6 +32,15 @@ class HumanoidTruncatedObsEnv(HumanoidEnv):
             reset_noise_scale,
             exclude_current_positions_from_observation
         )
+        
+        if exclude_current_positions_from_observation:
+            self.observation_space = Box(
+                low=-np.inf, high=np.inf, shape=(45,), dtype=np.float64
+            )
+        else:
+            self.observation_space = Box(
+                low=-np.inf, high=np.inf, shape=(47,), dtype=np.float64
+            )
 
     def _get_obs(self):
         position = self.sim.data.qpos.flat.copy()

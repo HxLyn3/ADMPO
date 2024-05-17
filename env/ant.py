@@ -1,4 +1,5 @@
 import numpy as np
+from gymnasium.spaces import Box
 from gymnasium.envs.mujoco.ant_v3 import AntEnv
 
 DEFAULT_CAMERA_CONFIG = {
@@ -31,6 +32,15 @@ class AntTruncatedObsEnv(AntEnv):
             reset_noise_scale,
             exclude_current_positions_from_observation
         )
+
+        if exclude_current_positions_from_observation:
+            self.observation_space = Box(
+                low=-np.inf, high=np.inf, shape=(27,), dtype=np.float64
+            )
+        else:
+            self.observation_space = Box(
+                low=-np.inf, high=np.inf, shape=(29,), dtype=np.float64
+            )
 
     def _get_obs(self):
         position = self.sim.data.qpos.flat.copy()
