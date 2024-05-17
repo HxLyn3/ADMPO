@@ -1,7 +1,7 @@
 from .sac import SACAgent
-from .armpo import ARMPOAgent
+from .admpo import ADMPOAgent
 
 AGENT = {
     "sac": SACAgent,
-    "armpo": ARMPOAgent
+    "admpo": ADMPOAgent
 }
