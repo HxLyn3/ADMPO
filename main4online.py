@@ -1,4 +1,5 @@
 import os
+import copy
 import yaml
 import random
 import argparse
@@ -15,10 +16,10 @@ def get_args():
     # environment settings
     parser.add_argument("--env", type=str, default="mujoco")
     # mujoco choices: ["InvertedPendulum-v2", "Hopper-v3", "Swimmer-v3", "Walker2d-v3", "HalfCheetah-v3", "AntTruncatedObs-v3", "HumanoidTruncatedObs-v3"]
-    parser.add_argument("--env-name", type=str, default="Walker2d-v3")
+    parser.add_argument("--env-name", type=str, default="AntTruncatedObs-v3")
 
     # policy parameters
-    parser.add_argument("--algo", type=str, default="armpo")
+    parser.add_argument("--algo", type=str, default="admpo")
     parser.add_argument("--ac-hidden-dims", type=list, default=[256, 256])              # dimensions of actor/critic hidden layers
     parser.add_argument("--actor-freq", type=int, default=1)
     parser.add_argument("--actor-lr", type=float, default=3e-4)                         # learning rate of actor
@@ -34,6 +35,7 @@ def get_args():
 
     # armpo parameters
     parser.add_argument("--max-arm-step", type=int, default=10)                          # maximum length of rnn input
+    parser.add_argument("--arm-hidden-dim", type=int, default=200)
 
     # replay-buffer parameters
     parser.add_argument("--buffer-size", type=int, default=int(1e6))
@@ -60,7 +62,7 @@ def get_args():
     parser.add_argument("--save-interval", type=int, default=int(1e4))
     parser.add_argument("--device", type=str, default="cuda:0")
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--seeds", type=int, nargs='*', default=list(range(10)))
+    parser.add_argument("--seeds", type=int, nargs='*', default=list(range(2, 3)))
 
     args = parser.parse_args()
     return args
@@ -88,7 +90,7 @@ def main():
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        runner = TRAINER["online"](args)
+        runner = TRAINER["online"](copy.deepcopy(args))
         runner.run()
 
 if __name__ == "__main__":

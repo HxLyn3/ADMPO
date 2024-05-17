@@ -1,4 +1,5 @@
 import os
+import copy
 import yaml
 import random
 import argparse
@@ -14,13 +15,14 @@ def get_args():
 
     # environment settings
     parser.add_argument("--env", type=str, default="d4rl")
-    parser.add_argument("--env-name", type=str, default="walker2d-random-v2")
+    parser.add_argument("--env-name", type=str, default="halfcheetah-medium-expert-v2")
 
     # policy parameters
-    parser.add_argument("--algo", type=str, default="armpo")
+    parser.add_argument("--algo", type=str, default="admpo")
     parser.add_argument("--ac-hidden-dims", type=list, default=[256, 256])              # dimensions of actor/critic hidden layers
     parser.add_argument("--actor-freq", type=int, default=1)
     parser.add_argument("--actor-lr", type=float, default=1e-4)                         # learning rate of actor
+    parser.add_argument("--lr-schedule", type=bool, default=True)
     parser.add_argument("--critic-lr", type=float, default=3e-4)                        # learning rate of critic
     parser.add_argument("--gamma", type=float, default=0.99)                            # discount factor
     parser.add_argument("--tau", type=float, default=0.005)                             # update rate of target network
@@ -33,6 +35,7 @@ def get_args():
 
     # armpo parameters
     parser.add_argument("--max-arm-step", type=int, default=10)                          # maximum length of rnn input
+    parser.add_argument("--arm-hidden-dim", type=int, default=200)
 
     # replay-buffer parameters
     parser.add_argument("--buffer-size", type=int, default=int(1e6))
@@ -81,7 +84,7 @@ def main():
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        runner = TRAINER["offline"](args)
+        runner = TRAINER["offline"](copy.deepcopy(args))
         runner.run()
 
 if __name__ == "__main__":
