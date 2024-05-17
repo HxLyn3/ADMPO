@@ -6,21 +6,21 @@ class ReplayBuffer:
     def __init__(self, buffer_size, obs_shape, action_dim):
         self.obs_shape = obs_shape
         self.action_dim = action_dim
-        self.memory = {
-            "s":       np.zeros((buffer_size, *self.obs_shape), dtype=np.float32),
-            "a":       np.zeros((buffer_size, self.action_dim), dtype=np.float32),
-            "r":       np.zeros((buffer_size, 1), dtype=np.float32),
-            "s_":      np.zeros((buffer_size, *self.obs_shape), dtype=np.float32),
-            "done":    np.zeros((buffer_size, 1), dtype=np.float32),
-            "timeout": np.zeros((buffer_size, 1), dtype=np.float32)
-        }
-
         self.capacity = buffer_size
         self.reset()
 
     def reset(self):
         self.size = 0
         self.cnt = 0
+
+        self.memory = {
+            "s":       np.zeros((self.capacity, *self.obs_shape), dtype=np.float32),
+            "a":       np.zeros((self.capacity, self.action_dim), dtype=np.float32),
+            "r":       np.zeros((self.capacity, 1), dtype=np.float32),
+            "s_":      np.zeros((self.capacity, *self.obs_shape), dtype=np.float32),
+            "done":    np.zeros((self.capacity, 1), dtype=np.float32),
+            "timeout": np.zeros((self.capacity, 1), dtype=np.float32)
+        }
 
         # not used
         self.cur_epi_start = 0
@@ -58,6 +58,10 @@ class ReplayBuffer:
         use_timeout = "timeouts" in dataset.keys()
 
         N = dataset["rewards"].shape[0]
+        if self.capacity < N:
+            self.capacity = N
+            self.reset()
+
         episode_step = 0
         for i in range(N-1):
             obs = dataset["observations"][i].astype(np.float32)
@@ -82,6 +86,23 @@ class ReplayBuffer:
 
             self.store(obs, action, reward, next_obs, done, timeout)
             episode_step += 1
+
+    def load_neorl_dataset(self, dataset):
+        """ load neorl dataset """
+        N = dataset["reward"].shape[0]
+        if self.capacity < N:
+            self.capacity = N
+            self.reset()
+
+        start_indexes = dataset["index"]
+        for i in range(N-1):
+            obs = dataset["obs"][i].astype(np.float32)
+            next_obs = dataset["next_obs"][i].astype(np.float32)
+            action = dataset["action"][i].astype(np.float32)
+            reward = dataset["reward"][i].astype(np.float32)
+            done = bool(dataset["done"][i])
+            timeout = (i + 1 in start_indexes)
+            self.store(obs, action, reward, next_obs, done, timeout)
 
     def cal_mu_std(self):
         """ calculate mean and std of obs and action """
