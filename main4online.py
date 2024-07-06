@@ -62,7 +62,7 @@ def get_args():
     parser.add_argument("--save-interval", type=int, default=int(1e4))
     parser.add_argument("--device", type=str, default="cuda:0")
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--seeds", type=int, nargs='*', default=list(range(2, 3)))
+    parser.add_argument("--seeds", type=int, nargs='*', default=list(range(10)))
 
     args = parser.parse_args()
     return args
