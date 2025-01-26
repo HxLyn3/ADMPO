@@ -30,10 +30,11 @@ class ADMPOAgent(SACAgent):
         target_entropy=-1,
         penalty_coef=1,
         deterministic_backup=False,
+        q_clip=None,
         device="cuda:0"
     ):
         super().__init__(obs_shape, hidden_dims, action_dim, action_space, actor_freq, actor_lr, critic_lr, 
-            tau, gamma, alpha, auto_alpha, alpha_lr, target_entropy, deterministic_backup, device)
+            tau, gamma, alpha, auto_alpha, alpha_lr, target_entropy, deterministic_backup, q_clip, device)
         self.penalty_coef = penalty_coef
 
         self.static_fn = static_fn

@@ -23,6 +23,7 @@ class SACAgent:
         alpha_lr=3e-4,
         target_entropy=-1,
         deterministic_backup=False,
+        q_clip=None,
         device="cuda:0"
     ):
         # actor
@@ -65,6 +66,7 @@ class SACAgent:
         self._tau = tau
         self._gamma = gamma
         self._deterministic_backup = deterministic_backup
+        self._q_clip = q_clip
         self._eps = np.finfo(np.float32).eps.item()
         self.device = device
 
@@ -121,7 +123,9 @@ class SACAgent:
         q1, q2 = self.critic1(s, a).flatten(), self.critic2(s, a).flatten()
         with torch.no_grad():
             a_, log_prob_ = self.actor4ward(s_)
-            q_ = torch.min(self.critic1_trgt(s_, a_), self.critic2_trgt(s_, a_)) 
+            q_ = torch.min(self.critic1_trgt(s_, a_), self.critic2_trgt(s_, a_))
+            if self._q_clip is not None:
+                q_ = q_.clip(None, self._q_clip)
             if not self._deterministic_backup:
                 q_ -= self._alpha*log_prob_
             q_trgt = r.flatten() + self._gamma*(1-done.flatten())*q_.flatten()
