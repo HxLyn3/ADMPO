@@ -22,6 +22,7 @@ class OFFTrainer(BASETrainer):
         # init armpo agent
         task = args.env_name.split('-')[0]
         if args.env == "neorl": task = "neorl-" + task
+        if args.env == "maze": task = task + "-" + args.env_name.split('-')[1]
         static_fn = STATICFUNC[task.lower()]
         self.agent = AGENT["admpo"](
             obs_shape=args.obs_shape,
@@ -43,6 +44,7 @@ class OFFTrainer(BASETrainer):
             target_entropy=args.target_entropy,
             penalty_coef=args.penalty_coef,
             deterministic_backup=args.deterministic_backup,
+            q_clip=args.q_clip,
             device=args.device
         )
         self.agent.train()
@@ -59,11 +61,12 @@ class OFFTrainer(BASETrainer):
             obs_shape=args.obs_shape,
             action_dim=args.action_dim
         )
+        rew_bias = 1 if args.env == "maze" else 0
         if args.env == "neorl":
             dataset, _ = self.env.get_dataset(data_type=args.data_type, train_num=1000, need_val=False)
-            self.memory.load_neorl_dataset(dataset)
+            self.memory.load_neorl_dataset(dataset, rew_bias)
         else:
-            self.memory.load_dataset(self.env.get_dataset(), self.env._max_episode_steps)
+            self.memory.load_dataset(self.env.get_dataset(), self.env._max_episode_steps, rew_bias)
 
         # creat memory to store model data
         model_buffer_size = args.rollout_batch_size*args.rollout_length*args.model_retain_epochs

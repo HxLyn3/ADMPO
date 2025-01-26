@@ -13,12 +13,17 @@ class BASETrainer:
     def __init__(self, args):
         # init env
         self.env = ENV[args.env](args.env_name)
-        self.env.reset(seed=args.seed)
         self.env.action_space.seed(args.seed)
 
         self.eval_env = ENV[args.env](args.env_name)
-        self.eval_env.reset(seed=args.seed)
         self.eval_env.action_space.seed(args.seed)
+
+        if args.env == "adroit" or args.env == "maze":
+            self.env.seed(args.seed)
+            self.eval_env.seed(args.seed)
+        else:
+            self.env.reset(seed=args.seed)
+            self.eval_env.reset(seed=args.seed)
 
         args.obs_shape = self.env.observation_space.shape
         args.action_space = self.env.action_space
