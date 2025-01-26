@@ -1,0 +1,8 @@
+max_arm_step: 2
+rollout_length: 5
+real_ratio: 0.25
+penalty_coef: 25
+deterministic_backup: True
+auto_alpha: False
+alpha: 0.05
+n_epochs: 5000
