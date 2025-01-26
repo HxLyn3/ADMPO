@@ -52,7 +52,7 @@ class ReplayBuffer:
         self.cnt = (self.cnt+batch_size)%self.capacity
         self.size = min(self.size+batch_size, self.capacity)
 
-    def load_dataset(self, dataset, max_episode_step):
+    def load_dataset(self, dataset, max_episode_step, rew_bias=0.0):
         """ load dataset """
         have_next_obs = "next_observations" in dataset.keys()
         use_timeout = "timeouts" in dataset.keys()
@@ -84,10 +84,10 @@ class ReplayBuffer:
                     self.cur_epi_start = self.cnt
                     continue
 
-            self.store(obs, action, reward, next_obs, done, timeout)
+            self.store(obs, action, reward + rew_bias, next_obs, done, timeout)
             episode_step += 1
 
-    def load_neorl_dataset(self, dataset):
+    def load_neorl_dataset(self, dataset, rew_bias=0.0):
         """ load neorl dataset """
         N = dataset["reward"].shape[0]
         if self.capacity < N:
@@ -102,7 +102,7 @@ class ReplayBuffer:
             reward = dataset["reward"][i].astype(np.float32)
             done = bool(dataset["done"][i])
             timeout = (i + 1 in start_indexes)
-            self.store(obs, action, reward, next_obs, done, timeout)
+            self.store(obs, action, reward + rew_bias, next_obs, done, timeout)
 
     def cal_mu_std(self):
         """ calculate mean and std of obs and action """
