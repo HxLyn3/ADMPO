@@ -6,8 +6,7 @@ class StaticFns:
     def termination_fn(obs, act, next_obs):
         assert len(obs.shape) == len(next_obs.shape) == len(act.shape) == 2
 
-        not_done = np.logical_and(np.all(next_obs > -100, axis=-1), np.all(next_obs < 100, axis=-1))
-        done = ~not_done
+        done = np.array([False] * obs.shape[0])
         done = done[:, None]
         return done
 
