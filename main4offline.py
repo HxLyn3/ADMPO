@@ -15,7 +15,7 @@ def get_args():
 
     # environment settings
     parser.add_argument("--env", type=str, default="d4rl")
-    parser.add_argument("--env-name", type=str, default="halfcheetah-medium-expert-v2")
+    parser.add_argument("--env-name", type=str, default="hopper-medium-v2")
 
     # policy parameters
     parser.add_argument("--algo", type=str, default="admpo")
@@ -32,6 +32,7 @@ def get_args():
     parser.add_argument("--target-entropy", type=int, default=None)                     # target entropy
     parser.add_argument("--penalty-coef", type=float, default=1.0)                      # penalty coefficient
     parser.add_argument("--deterministic-backup", type=bool, default=False)
+    parser.add_argument("--q-clip", type=float, default=None)
 
     # armpo parameters
     parser.add_argument("--max-arm-step", type=int, default=10)                          # maximum length of rnn input
