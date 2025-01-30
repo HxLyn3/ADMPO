@@ -1,6 +1,6 @@
 # ADMPO: Any-step Dynamics Model for Policy Optimization
 
-This is the code for the paper "Any-step Dynamics Model Improves Future Predictions for Online and Offline Reinforcement Learning" in ICLR 2025.
+This is the code for the paper [Any-step Dynamics Model Improves Future Predictions for Online and Offline Reinforcement Learning](https://openreview.net/forum?id=JZCxlrwjZ8) in ICLR 2025.
 
 ## Requirements
 
