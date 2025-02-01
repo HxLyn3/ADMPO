@@ -1,5 +1,7 @@
 # ADMPO: Any-step Dynamics Model for Policy Optimization
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/HxLyn3/ADMPO/blob/main/LICENSE)
+
 This is the code for the paper [Any-step Dynamics Model Improves Future Predictions for Online and Offline Reinforcement Learning](https://openreview.net/forum?id=JZCxlrwjZ8) in ICLR 2025.
 
 ## Requirements
