@@ -49,14 +49,14 @@ If you find this repository useful for your research, please cite:
 @inproceedings{
     admpo,
     author       = {Haoxin Lin and
-                  Yu{-}Yan Xu and
-                  Yihao Sun and
-                  Zhilong Zhang and
-                  Yi{-}Chen Li and
-                  Chengxing Jia and
-                  Junyin Ye and
-                  Jiaji Zhang and
-                  Yang Yu},
+                    Yu{-}Yan Xu and
+                    Yihao Sun and
+                    Zhilong Zhang and
+                    Yi{-}Chen Li and
+                    Chengxing Jia and
+                    Junyin Ye and
+                    Jiaji Zhang and
+                    Yang Yu},
     title        = {Any-step Dynamics Model Improves Future Predictions for Online and Offline Reinforcement Learning},
     booktitle    = {The 13th International Conference on Learning Representations (ICLR'25)},
     year         = {2025},
